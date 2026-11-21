@@ -1,0 +1,13 @@
+{
+  "wildclimb.configuration.title": "旷野攀爬 设置",
+  "wildclimb.configuration.section.wildclimb.common.toml": "旷野攀爬 设置",
+  "wildclimb.configuration.section.wildclimb.common.toml.title": "旷野攀爬 设置",
+  "wildclimb.configuration.climbSpeed": "攀爬速度（格/秒）",
+  "wildclimb.configuration.climbSpeed.tooltip": "向上、向下、横向攀爬共用这个速度。",
+  "wildclimb.configuration.climbStamina": "攀爬耐力消耗（每秒）",
+  "wildclimb.configuration.climbStamina.tooltip": "攀爬时每秒消耗的耐力值。Paraglider 一圈耐力为 1000 点。",
+  "wildclimb.configuration.climbJumpStamina": "攀爬跳跃耐力消耗",
+  "wildclimb.configuration.climbJumpStamina.tooltip": "一次攀爬跳跃消耗的耐力值。",
+  "wildclimb.configuration.autoDeployParaglider": "自动开伞",
+  "wildclimb.configuration.autoDeployParaglider.tooltip": "空中按跳跃键自动展开背包里的滑翔伞，再按一次收起。"
+}

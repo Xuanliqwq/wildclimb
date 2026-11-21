@@ -1,0 +1,13 @@
+{
+  "wildclimb.configuration.title": "Wildclimb Settings",
+  "wildclimb.configuration.section.wildclimb.common.toml": "Wildclimb Settings",
+  "wildclimb.configuration.section.wildclimb.common.toml.title": "Wildclimb Settings",
+  "wildclimb.configuration.climbSpeed": "Climb Speed (blocks/second)",
+  "wildclimb.configuration.climbSpeed.tooltip": "Used for climbing up, down and sideways.",
+  "wildclimb.configuration.climbStamina": "Climb Stamina (per second)",
+  "wildclimb.configuration.climbStamina.tooltip": "Stamina spent per second while climbing. One Paraglider stamina wheel is 1000.",
+  "wildclimb.configuration.climbJumpStamina": "Climb Jump Stamina Cost",
+  "wildclimb.configuration.climbJumpStamina.tooltip": "Stamina spent by one climb jump.",
+  "wildclimb.configuration.autoDeployParaglider": "Auto Deploy Paraglider",
+  "wildclimb.configuration.autoDeployParaglider.tooltip": "Press jump in mid-air to deploy the paraglider from your inventory; press again to close it."
+}

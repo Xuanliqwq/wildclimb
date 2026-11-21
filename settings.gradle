@@ -1,0 +1,17 @@
+pluginManagement {
+    repositories {
+        maven { name = 'AliyunGradlePlugin'; url = 'https://maven.aliyun.com/repository/gradle-plugin' }
+        maven { name = 'HuaweiCloudGradlePlugin'; url = 'https://repo.huaweicloud.com/repository/gradle-plugin/' }
+        maven { name = 'AliyunPublic'; url = 'https://maven.aliyun.com/repository/public' }
+        maven { name = 'AliyunCentral'; url = 'https://maven.aliyun.com/repository/central' }
+        maven { name = 'HuaweiCloud'; url = 'https://repo.huaweicloud.com/repository/maven/' }
+        maven { name = 'TencentCloud'; url = 'https://mirrors.cloud.tencent.com/nexus/repository/maven-public/' }
+        gradlePluginPortal()
+    }
+}
+
+plugins {
+    id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
+}
+
+rootProject.name = 'wildclimb'
