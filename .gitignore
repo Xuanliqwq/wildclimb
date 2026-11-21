@@ -38,6 +38,3 @@ run/
 **/src/generated/**/.cache/
 repo/
 !**/src/**/repo/
-
-### Local compile-only dependencies (not redistributable) ###
-libs/*.jar

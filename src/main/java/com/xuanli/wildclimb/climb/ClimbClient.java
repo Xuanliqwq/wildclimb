@@ -23,10 +23,9 @@ import net.neoforged.neoforge.network.PacketDistributor;
  * 以及对其他玩家攀爬状态的同步。
  */
 public final class ClimbClient {
-    /** 翻上墙顶的动画总时长（刻）。 */
-    private static final int MANTLE_TICKS = 8;
-    /** 翻越动画中先上升再前移的分界点。 */
-    private static final double MANTLE_RISE = 0.55D;
+    /** 翻上墙顶的动画总时长（刻）与上升/前移分界点，定义在 {@link ClimbData} 里供动画层共用。 */
+    private static final int MANTLE_TICKS = ClimbData.MANTLE_TICKS;
+    private static final double MANTLE_RISE = ClimbData.MANTLE_RISE;
     /** 绕墙角的动画时长（刻）。 */
     private static final int CORNER_TICKS = 4;
     /** 绕角时向外鼓出的幅度，避免身体切进墙角。 */
@@ -463,7 +462,8 @@ public final class ClimbClient {
         if (data.mantleTicks >= MANTLE_TICKS) {
             player.setPos(data.mantleTargetX, data.mantleTargetY, data.mantleTargetZ);
             player.setNoGravity(false);
-            player.setDeltaMovement(0.0D, 0.12D, 0.0D);
+            player.setDeltaMovement(Vec3.ZERO);
+            player.fallDistance = 0.0F;
             data.mantleTicks = 0;
         } else {
             data.mantleTicks++;

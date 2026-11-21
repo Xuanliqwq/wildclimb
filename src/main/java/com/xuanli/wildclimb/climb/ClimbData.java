@@ -8,6 +8,10 @@ import net.minecraft.core.Direction;
 public final class ClimbData {
     /** 双手够到墙顶时，脚底距离墙顶表面的高度差。 */
     public static final double HANG_OFFSET = 1.55D;
+    /** 翻上墙顶的动画总时长（刻），与 climb_mantle 动画长度（0.4 秒）对齐。 */
+    public static final int MANTLE_TICKS = 8;
+    /** 翻越动画中“先上升”和“再前移”的分界点。 */
+    public static final double MANTLE_RISE = 0.55D;
 
     /** 是否正在攀爬。 */
     public boolean climbing;
