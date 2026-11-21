@@ -6,6 +6,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
@@ -247,6 +248,8 @@ public final class ClimbHelper {
         if (player.isSpectator() || player.isPassenger() || player.isDeadOrDying() || player.isSleeping()) return false;
         if (player.isInWater() || player.isInLava() || player.isFallFlying()) return false;
         if (player.getAbilities().flying) return false;
+        // 梯子、藤蔓、脚手架等原版可攀爬方块优先：站在上面或正对着它们时交给原版处理
+        if (isOnOrFacingClimbable(player)) return false;
         ClimbData data = ClimbAttachments.get(player);
         return !data.climbing && data.cooldown <= 0;
     }
@@ -257,12 +260,36 @@ public final class ClimbHelper {
         if (player.isSpectator() || player.isPassenger() || player.isDeadOrDying()) return false;
         if (player.isInWater() || player.isInLava() || player.isFallFlying()) return false;
         if (player.getAbilities().flying) return false;
+        // 爬到梯子/藤蔓上时把控制权交还原版
+        if (isOnOrFacingClimbable(player)) return false;
 
         Level level = player.level();
         BlockPos column = columnInFront(player, data.wallDir);
         int feetBlockY = Mth.floor(player.getY() + 0.1D);
         return isWall(level, new BlockPos(column.getX(), feetBlockY, column.getZ()), data.wallDir)
                 || isWall(level, new BlockPos(column.getX(), feetBlockY + 1, column.getZ()), data.wallDir);
+    }
+
+    /**
+     * 玩家身体里或正对着的位置是否有梯子/藤蔓/脚手架等原版可攀爬方块。
+     *
+     * <p>只查脚下那一格不够：梯子常常从第二格才开始贴，玩家站在地面时脚下是空气，
+     * 但正前方那格就是梯子，这种情况也要让位给原版。</p>
+     */
+    public static boolean isOnOrFacingClimbable(Player player) {
+        if (player.onClimbable()) return true;
+
+        Level level = player.level();
+        int feetY = Mth.floor(player.getY() + 0.1D);
+        BlockPos feet = new BlockPos(Mth.floor(player.getX()), feetY, Mth.floor(player.getZ()));
+        if (isClimbable(level, feet) || isClimbable(level, feet.above())) return true;
+
+        BlockPos front = feet.relative(player.getDirection());
+        return isClimbable(level, front) || isClimbable(level, front.above());
+    }
+
+    private static boolean isClimbable(Level level, BlockPos pos) {
+        return level.getBlockState(pos).is(BlockTags.CLIMBABLE);
     }
 
     /** 墙顶是否有足够空间让玩家翻上去。 */
