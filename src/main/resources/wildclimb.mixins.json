@@ -6,6 +6,7 @@
   "client": [
     "ItemInHandLayerMixin",
     "ItemInHandRendererMixin",
+    "LivingEntityRendererMixin",
     "PlayerRendererMixin"
   ],
   "injectors": {

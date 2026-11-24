@@ -10,11 +10,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
-/**
- * 第三人称下，把正在“背包滑翔”的玩家主手渲染成滑翔伞，于是伞盖模型正常显示。
- *
- * <p>只替换渲染用的 {@link ItemStack}，玩家背包里的物品不会发生任何变化。</p>
- */
+/** Substitutes only the rendered main-hand item when inventory gliding. */
 @Mixin(ItemInHandLayer.class)
 public abstract class ItemInHandLayerMixin {
     @Redirect(

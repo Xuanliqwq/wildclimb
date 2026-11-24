@@ -11,11 +11,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
-/**
- * 第一人称下，把“背包滑翔”时的手持物品渲染替换成滑翔伞，于是第一人称也能看到伞盖。
- *
- * <p>只改渲染时读到的物品，背包物品本身不变。</p>
- */
+/** Renders the inventory paraglider canopy in first person. */
 @Mixin(ItemInHandRenderer.class)
 public abstract class ItemInHandRendererMixin {
     @Redirect(

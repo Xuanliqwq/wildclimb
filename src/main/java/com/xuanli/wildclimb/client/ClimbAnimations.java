@@ -6,11 +6,14 @@ import com.zigythebird.playeranim.api.PlayerAnimationFactory;
 import com.zigythebird.playeranimcore.animation.Animation;
 import com.zigythebird.playeranimcore.animation.AnimationController;
 import com.zigythebird.playeranimcore.animation.RawAnimation;
+import com.zigythebird.playeranimcore.animation.layered.AnimationSnapshot;
+import com.zigythebird.playeranimcore.animation.layered.modifier.AbstractFadeModifier;
+import com.zigythebird.playeranimcore.bones.AdvancedBoneSnapshot;
+import com.zigythebird.playeranimcore.easing.EasingType;
 import com.zigythebird.playeranimcore.enums.PlayState;
 import com.xuanli.wildclimb.Wildclimb;
 import com.xuanli.wildclimb.climb.ClimbAttachments;
 import com.xuanli.wildclimb.climb.ClimbData;
-import com.xuanli.wildclimb.climb.ClimbHelper;
 
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.resources.ResourceLocation;
@@ -23,22 +26,19 @@ import org.jetbrains.annotations.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * 攀爬动画层（基于 Player Animation Library）。
- *
- * <p>循环动画：{@code climb_idle}（挂在墙上休息）、{@code climb_move}（手脚交替摆动向上爬）、
- * {@code climb_edge}（双手抓住墙顶边缘）；翻上墙顶用一次性的 {@code climb_mantle}
- * （先用手臂撑起上半身，再收腿站上台面）。</p>
- */
-@EventBusSubscriber(modid = Wildclimb.MODID, value = Dist.CLIENT, bus = EventBusSubscriber.Bus.MOD)
+/** Selects climbing animation clips and blends one-shot jumps with the active pose. */
+@EventBusSubscriber(modid = Wildclimb.MODID, value = Dist.CLIENT)
 public final class ClimbAnimations {
     public static final ResourceLocation LAYER = Wildclimb.id("climb");
     public static final ResourceLocation CLIMB_IDLE = Wildclimb.id("climb_idle");
     public static final ResourceLocation CLIMB_MOVE = Wildclimb.id("climb_move");
+    private static final ResourceLocation CLIMB_DESCEND = Wildclimb.id("climb_descend");
+    public static final ResourceLocation CLIMB_JUMP = Wildclimb.id("climb_jump");
+    private static final ResourceLocation TRAVERSE_RIGHT = Wildclimb.id("climb_traverse_right");
+    private static final ResourceLocation TRAVERSE_LEFT = Wildclimb.id("climb_traverse_left");
     public static final ResourceLocation CLIMB_EDGE = Wildclimb.id("climb_edge");
     public static final ResourceLocation CLIMB_MANTLE = Wildclimb.id("climb_mantle");
 
-    /** 玩法动画，优先级高于表情等装饰性动画。 */
     private static final int PRIORITY = 1500;
 
     private static final Map<ResourceLocation, CachedAnimation> LOOPING = new HashMap<>();
@@ -48,49 +48,78 @@ public final class ClimbAnimations {
 
     @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent event) {
-        // NeoForge 上必须在 enqueueWork 里注册
         event.enqueueWork(() -> PlayerAnimationFactory.ANIMATION_DATA_FACTORY.registerFactory(
                 LAYER,
                 PRIORITY,
-                player -> new PlayerAnimationController(player,
-                        (controller, state, animSetter) -> handle(player, animSetter))));
+                ClimbAnimationController::new));
+    }
+
+    private static final class ClimbAnimationController extends PlayerAnimationController {
+        private final ClimbData climb;
+
+        private ClimbAnimationController(AbstractClientPlayer player) {
+            super(player, (controller, state, animSetter) -> handle(player, animSetter));
+            climb = ClimbAttachments.get(player);
+        }
+
+        @Override
+        public float getAnimationSpeed() {
+            return climb.moving && climb.cornerTicks == 0 && climb.mantleTicks == 0
+                    && climb.jumpAnimationTicks == 0 ? climb.animationSpeed : 1.0F;
+        }
+
+        @Override
+        protected void setAnimation(RawAnimation next, float startTick) {
+            RawAnimation current = getCurrentRawAnimation();
+            RawAnimation jump = rawAnimation(CLIMB_JUMP, false);
+            if (current != null && next != null && current != next && (current == jump || next == jump)) {
+                // Blend from the current bone pose without waiting for a particular step in the climb cycle.
+                Map<String, AdvancedBoneSnapshot> pose = new HashMap<>();
+                activeBones.forEach((name, bone) -> pose.put(name, new AdvancedBoneSnapshot(bone)));
+                int fadeTicks = next == jump ? 2 : 4;
+                AbstractFadeModifier fade = AbstractFadeModifier.standardFadeIn(fadeTicks, EasingType.EASE_IN_OUT_SINE);
+                fade.setTransitionAnimation(new AnimationSnapshot(pose));
+                removeModifierIf(AbstractFadeModifier.class::isInstance);
+                addModifierLast(fade);
+            }
+            super.setAnimation(next, startTick);
+        }
     }
 
     private static PlayState handle(AbstractClientPlayer player, AnimationController.AnimationSetter animSetter) {
         ClimbData data = ClimbAttachments.get(player);
         boolean mantling = data.mantleTicks > 0;
-        boolean climbing = data.climbing;
-        // 已经离开墙面（跳离、掉落）时立刻收掉攀爬姿势，别等状态包同步
-        if (climbing && !mantling && data.graceTicks <= 0 && data.cornerTicks <= 0
-                && !ClimbHelper.canStillClimb(player, data)) {
-            climbing = false;
-        }
-        if (!climbing && !mantling) {
-            // 只返回 STOP 不会清掉已经应用的姿势，必须显式 setAnimation(null) 才会让 PAL 调用 stop()
+        if (!data.climbing && !mantling) {
+            // Clear the current PAL clip explicitly when climbing ends.
             animSetter.setAnimation(null);
             return PlayState.STOP;
         }
 
-        // 翻上墙顶：一次性过渡动画（撑起上半身 → 收腿站起），播完就交给原版姿势
         if (mantling) {
             RawAnimation mantle = rawAnimation(CLIMB_MANTLE, false);
             if (mantle == null) return PlayState.STOP;
             return animSetter.setAnimation(mantle);
         }
 
-        ResourceLocation id = data.atTop
-                ? CLIMB_EDGE
-                : (data.moving || data.jumpVelocity > 0.0D ? CLIMB_MOVE : CLIMB_IDLE);
+        if (data.jumpAnimationTicks > 0) {
+            RawAnimation jump = rawAnimation(CLIMB_JUMP, false);
+            if (jump != null) return animSetter.setAnimation(jump);
+        }
+
+        ResourceLocation id;
+        if (data.traverseDirection != 0) {
+            id = data.traverseDirection > 0 ? TRAVERSE_RIGHT : TRAVERSE_LEFT;
+        } else if (data.atTop) {
+            id = CLIMB_EDGE;
+        } else {
+            id = data.moving ? (data.descending ? CLIMB_DESCEND : CLIMB_MOVE) : CLIMB_IDLE;
+        }
         RawAnimation raw = rawAnimation(id, true);
         if (raw == null) return PlayState.STOP;
         return animSetter.setAnimation(raw);
     }
 
-    /**
-     * 动画资源在资源包重载时会被重新加载，所以这里按实例身份判断缓存是否还有效。
-     *
-     * @param loop {@code true} 循环播放，{@code false} 只播一次
-     */
+    /** Reuses constructed clips while their underlying resource instances remain current. */
     private static @Nullable RawAnimation rawAnimation(ResourceLocation id, boolean loop) {
         Animation animation = PlayerAnimResources.getAnimation(id);
         if (animation == null) {
@@ -102,9 +131,15 @@ public final class ClimbAnimations {
         CachedAnimation cached = cache.get(id);
         if (cached != null && cached.animation == animation) return cached.raw;
 
-        RawAnimation raw = loop
-                ? RawAnimation.begin().thenLoop(animation)
-                : RawAnimation.begin().thenPlay(animation);
+        RawAnimation raw = RawAnimation.begin();
+        if (loop) {
+            raw.thenLoop(animation);
+        } else if (CLIMB_JUMP.equals(id)) {
+            // Keep the regrip pose available until the climbing state requests a blend out.
+            raw.thenPlayAndHold(animation);
+        } else {
+            raw.thenPlay(animation);
+        }
         cache.put(id, new CachedAnimation(animation, raw));
         return raw;
     }

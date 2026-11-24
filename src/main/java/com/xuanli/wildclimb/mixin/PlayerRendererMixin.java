@@ -14,13 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import tictim.paraglider.api.ParagliderAPI;
 import tictim.paraglider.client.ParaglidingArmPose;
 
-/**
- * 让“背包滑翔”的玩家也摆出握着滑翔伞的手臂姿势。
- *
- * <p>Paraglider 的手臂姿势是从主手物品上算出来的，而本模组只是替换渲染、不动物品，
- * 所以在姿势算完后补一手：滑翔中且主手不是滑翔伞时，把主手那边的 {@code ArmPose}
- * 换成 Paraglider 的滑翔姿势。</p>
- */
+/** Applies the gliding arm pose when the canopy comes from the inventory. */
 @Mixin(PlayerRenderer.class)
 public abstract class PlayerRendererMixin {
     @Inject(method = "setModelProperties", at = @At("TAIL"))

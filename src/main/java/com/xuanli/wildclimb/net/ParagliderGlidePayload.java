@@ -9,9 +9,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
-/**
- * 客户端 -> 服务端：请求展开或收起背包里的滑翔伞（不移动任何物品）。
- */
+/** Client request to deploy or stow the inventory paraglider. */
 public record ParagliderGlidePayload(boolean glide) implements CustomPacketPayload {
     public static final CustomPacketPayload.Type<ParagliderGlidePayload> TYPE =
             new CustomPacketPayload.Type<>(Wildclimb.id("paraglider_glide"));

@@ -27,6 +27,8 @@
 
 ## Notes
 
+- To build with a Paraglider JAR outside the checkout, pass "-PparagliderPath=/absolute/path/to/Paraglider.jar" to Gradle.
+
 - `libs/*.jar` is **not** committed on purpose: Paraglider is licensed under **GPLv3**
   and is distributed by its own author. Please download it from the link above instead
   of bundling it with this repository.

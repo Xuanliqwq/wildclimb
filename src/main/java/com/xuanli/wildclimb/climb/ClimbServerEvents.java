@@ -16,8 +16,9 @@ public final class ClimbServerEvents {
     @SubscribeEvent
     public static void onPlayerTick(PlayerTickEvent.Post event) {
         if (event.getEntity() instanceof ServerPlayer player) {
-            ParagliderGlide.tick(player);
-            ClimbServer.tick(player);
+            ClimbData data = ClimbAttachments.get(player);
+            ParagliderGlide.tick(player, data);
+            ClimbServer.tick(player, data);
         }
     }
 

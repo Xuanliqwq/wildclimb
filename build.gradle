@@ -23,7 +23,7 @@ sourceSets.main.resources {
 
     // Exclude common development only resources from finalized outputs
     exclude("**/*.bbmodel") // BlockBench project files
-    // Datagen 缓存：exclude 的匹配对象是“相对于资源根目录的路径”，所以写 .cache/ 而不是 src/generated/...
+    // Resource exclusions are relative to each resource root.
     exclude(".cache")
     exclude(".cache/**")
 }
@@ -138,6 +138,8 @@ configurations {
     runtimeClasspath.extendsFrom localRuntime
 }
 
+def paragliderFile = providers.gradleProperty('paragliderPath').orElse("libs/${paraglider_jar}")
+
 dependencies {
     // Player Animation Library — used for the climbing limb animations.
     // The mod jar bundles its own core classes, and its published POM wants newer gson/netty/slf4j/
@@ -148,8 +150,8 @@ dependencies {
 
     // Paraglider — the stamina system this mod builds on. The mod is not published to a public
     // maven repository, so the runtime jar in libs/ is used for compilation and dev runs.
-    compileOnly(files("libs/${paraglider_jar}"))
-    localRuntime(files("libs/${paraglider_jar}"))
+    compileOnly(files(paragliderFile))
+    localRuntime(files(paragliderFile))
 
     // Example optional mod dependency with JEI
     // The JEI API is declared for compile time use, while the full JEI artifact is used at runtime

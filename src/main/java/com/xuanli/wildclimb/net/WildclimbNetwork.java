@@ -7,7 +7,7 @@ public final class WildclimbNetwork {
     private WildclimbNetwork() {}
 
     public static void registerPayloads(RegisterPayloadHandlersEvent event) {
-        PayloadRegistrar registrar = event.registrar("1");
+        PayloadRegistrar registrar = event.registrar("3");
         registrar.playToServer(ClimbActionPayload.TYPE, ClimbActionPayload.STREAM_CODEC, ClimbActionPayload::handle);
         registrar.playToServer(ParagliderGlidePayload.TYPE, ParagliderGlidePayload.STREAM_CODEC,
                 ParagliderGlidePayload::handle);

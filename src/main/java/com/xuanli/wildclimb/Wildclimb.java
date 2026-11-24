@@ -17,13 +17,7 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
 import org.slf4j.Logger;
 
-/**
- * 旷野攀爬 / Wildclimb
- *
- * <p>A Breath of the Wild style climbing system built on top of Paraglider's stamina system.
- * Players can grab walls that are at least two blocks tall and climb them, spending stamina,
- * until they either reach the top or run out of stamina.</p>
- */
+/** Wild Climb common entry point. */
 @Mod(Wildclimb.MODID)
 public final class Wildclimb {
     /** The mod id, must match the value in META-INF/neoforge.mods.toml. */
@@ -40,11 +34,10 @@ public final class Wildclimb {
 
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
 
-        // 构造阶段所有模组都还没有读取配置文件，此时修改 Paraglider 的状态配置最稳妥，
-        // 本次启动就会生效。
+        // Patch existing Paraglider state configuration before it is loaded.
         ParagliderStateConfig.apply(FMLPaths.CONFIGDIR.get());
 
-        // 进入世界后再检查一次：配置文件可能是这一局才生成的，改完让 Paraglider 立即重载
+        // Check again when the server starts, since Paraglider may have just generated the file.
         NeoForge.EVENT_BUS.addListener((ServerStartedEvent event) -> {
             if (ParagliderStateConfig.apply(FMLPaths.CONFIGDIR.get())) {
                 reloadParagliderStates(event.getServer());
@@ -61,9 +54,9 @@ public final class Wildclimb {
             server.getCommands().performPrefixedCommand(
                     server.createCommandSourceStack().withSuppressedOutput(),
                     "paraglider reloadPlayerStates");
-            LOGGER.info("[wildclimb] 已让 Paraglider 重新加载玩家状态配置");
+            LOGGER.info("[wildclimb] Reloaded Paraglider player state configuration");
         } catch (Exception e) {
-            LOGGER.warn("[wildclimb] 执行 Paraglider 重载命令失败，配置将在下次启动时生效", e);
+            LOGGER.warn("[wildclimb] Could not reload Paraglider player states; changes will apply at the next startup", e);
         }
     }
 
